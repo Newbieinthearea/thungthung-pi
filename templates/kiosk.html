@@ -160,23 +160,49 @@
             } catch(e) {}
             showLoading(false);
         }
+
+        // --- 👇 UPDATED SCAN ITEM FUNCTION ---
         async function scanItem() {
             const btn = document.getElementById('btn-scan');
             const statusText = document.getElementById('scan-status');
-            btn.disabled = true; btn.classList.add('opacity-50');
+            
+            // UI Loading State
+            btn.disabled = true; 
+            btn.classList.add('opacity-50');
             statusText.innerText = "Scanning...";
+            
             try {
                 const res = await fetch('/action/scan', { method: 'POST' });
                 const data = await res.json();
+                
                 if (data.success) {
-                    statusText.innerText = data.label === 'Plastic' ? "Detected: Plastic" : "Detected: Can";
-                    statusText.className = "text-xl md:text-2xl font-bold mb-1 " + (data.label === 'Plastic' ? "text-green-500" : "text-blue-500");
                     const pulse = document.getElementById('scan-pulse');
+                    
+                    // --- 3-CLASS LOGIC ---
+                    if (data.label === 'Other') {
+                        // ❌ REJECTED
+                        statusText.innerText = "Not a Can/Plastic";
+                        statusText.className = "text-xl md:text-2xl font-bold mb-1 text-orange-500";
+                    } else if (data.label === 'Plastic') {
+                        // ✅ PLASTIC
+                        statusText.innerText = "Detected: Plastic";
+                        statusText.className = "text-xl md:text-2xl font-bold mb-1 text-green-500";
+                    } else {
+                        // ✅ CAN
+                        statusText.innerText = "Detected: Can";
+                        statusText.className = "text-xl md:text-2xl font-bold mb-1 text-blue-500";
+                    }
+                    
                     pulse.classList.remove('hidden');
                     setTimeout(() => pulse.classList.add('hidden'), 500);
                 }
             } catch(e) {}
-            btn.disabled = false; btn.classList.remove('opacity-50');
+            
+            // Reset Button
+            btn.disabled = false; 
+            btn.classList.remove('opacity-50');
+            
+            // Reset Text after delay
             setTimeout(() => {
                 if(!btn.disabled) {
                     statusText.innerText = "Ready";
@@ -184,6 +210,8 @@
                 }
             }, 2000);
         }
+        // -------------------------------------
+
         async function stopSession() {
             showLoading(true);
             try {
